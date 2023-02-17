@@ -3,7 +3,8 @@ import json
 
 # use ifconfig en0 to find target ip
 SERVER_NAME = "RPi_1"
-HOST = socket.gethostbyname("0.0.0.0")
+HOST = socket.gethostname()
+print("Hostname: ", HOST)
 PORT = 5000
 
 
