@@ -1,10 +1,10 @@
-import tkinter
+from tkinter import filedialog
 import customtkinter
 from PIL import Image
 from CTkColorPicker import AskColor
 from scanner import scan_network
 from client import DisconnectedClientError, GUIClient
-from tkinter.messagebox import showerror
+from tkinter.messagebox import showerror, showinfo
 
 customtkinter.set_appearance_mode("system")
 
@@ -20,6 +20,9 @@ class App(customtkinter.CTk):
         self.port = 0
         self.server_name = ""
         self.client = GUIClient()
+        self.color = "#ffffff"
+        self.brightness = 50
+        self.sensitivity = 50
 
         # TOP LEVEL SETTINGS
         self.title("LASERS")
@@ -106,7 +109,6 @@ class App(customtkinter.CTk):
         )
         self.label_port.grid(row=0, column=1, pady=10, padx=10)
 
-        # TODO: Figure out how to obtain server name
         self.label_server_name = customtkinter.CTkLabel(
             master=self.frame_connect_top, text="Server Name"
         )
@@ -159,10 +161,46 @@ class App(customtkinter.CTk):
         self.slider_brightness.grid(row=2, column=1, pady=10, padx=10)
         self.slider_brightness.set(0.5)
 
+        self.label_ilda = customtkinter.CTkLabel(
+            master=self.frame_connect_bot, text="Upload Lasershow"
+        )
+        self.label_ilda.grid(row=3, column=0, pady=10, padx=10)
+
+        self.frame_connect_bot_ilda = customtkinter.CTkFrame(self.frame_connect_bot)
+        self.frame_connect_bot_ilda.grid(row=3, column=1)
+
+        self.textbox_ilda = customtkinter.CTkTextbox(
+            master=self.frame_connect_bot_ilda, activate_scrollbars=False, height=12
+        )
+        self.textbox_ilda.grid(row=0, column=0, pady=10, padx=10)
+
+        self.button_ilda = customtkinter.CTkButton(
+            master=self.frame_connect_bot_ilda,
+            command=self.button_ilda_callback,
+            text="Browse",
+            width=50,
+        )
+        self.button_ilda.grid(row=0, column=1, pady=10, padx=10)
+
+        self.button_import_ilda = customtkinter.CTkButton(
+            master=self.frame_connect_bot_ilda,
+            command=self.button_import_ilda_callback,
+            text="Upload",
+            width=50,
+        )
+        self.button_import_ilda.grid(row=0, column=2, pady=10, padx=10)
+
+        self.button_update_settings = customtkinter.CTkButton(
+            master=self.frame_connect,
+            command=self.update_device_settings,
+            text="Update",
+        )
+        self.button_update_settings.grid(row=2, column=0)
+
     # CALLBACK FUNCTIONS
 
     def button_connect_callback(self):
-        print("Connecting to", self.ip_address)
+        print(f"Connecting to {self.ip_address}:{self.port}")
         try:
             resp = self.client.connect(self.ip_address, self.port)
             self.server_name = resp
@@ -209,16 +247,12 @@ class App(customtkinter.CTk):
             self.button_connect.configure(state="disabled")
 
     def slider_sensitivity_callback(self, value):
-        print("Sensitivity slider value: ", value)
-        self.label_sensitivity.configure(
-            text="Sensitivity {:0.0f}%".format(100 * (value / 1.0))
-        )
+        self.sensitivity = int(100 * (value / 1.0))
+        self.label_sensitivity.configure(text=f"Sensitivity {self.sensitivity}%")
 
     def slider_brightness_callback(self, value):
-        print("Brightness slider value: ", value)
-        self.label_brightness.configure(
-            text="Brightness {:0.0f}%".format(100 * (value / 1.0))
-        )
+        self.brightness = int(100 * (value / 1.0))
+        self.label_brightness.configure(text=f"Brightness {self.brightness}%")
 
     def entry_port_callback(self, value):
         if value.isnumeric():
@@ -234,8 +268,25 @@ class App(customtkinter.CTk):
     def button_color_callback(self):
         pick_color = AskColor()  # Open the Color Picker
         color = pick_color.get() or "#ffffff"  # Get the color
+        self.color = color
         self.button_color.configure(fg_color=color)
         self.button_color.configure(text=color)
+
+    def button_ilda_callback(self):
+        filename = filedialog.askopenfilename(
+            initialdir="/",
+            title="Select a File",
+            filetypes=[("ILDA files", "*.ild *.ilda")],
+        )
+        self.textbox_ilda.delete("0.0", "end")
+        self.textbox_ilda.insert("0.0", filename)
+
+    def button_import_ilda_callback(self):
+        try:
+            self.client.sendFileMessage(self.textbox_ilda.get("0.0", "end").strip())
+            showinfo(title="Info", message="File successfully uploaded.")
+        except Exception as e:
+            showerror(title="Error", message=f"File failed to upload. Error stack: {e}")
 
     def change_appearance_mode_event(self, new_appearance_mode):
         customtkinter.set_appearance_mode(new_appearance_mode)
@@ -257,6 +308,9 @@ class App(customtkinter.CTk):
         self.port = 0
         self.server_name = ""
         self.client = GUIClient()
+
+    def update_device_settings(self):
+        self.client.sendSettingsMessage(self.color, self.brightness, self.sensitivity)
 
 
 if __name__ == "__main__":
