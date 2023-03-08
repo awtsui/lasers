@@ -84,7 +84,7 @@ class Stream_Reader:
             start = time.time()
 
         if self.data_buffer is not None:
-            self.data_buffer.append_data(np.frombuffer(in_data, dtype=np.int32paInt32))
+            self.data_buffer.append_data(np.frombuffer(in_data, dtype=np.int32))
             self.new_data = True
 
         if self.verbose:
