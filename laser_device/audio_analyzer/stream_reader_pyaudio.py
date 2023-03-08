@@ -53,7 +53,7 @@ class Stream_Reader:
 
         self.stream = self.pa.open(
             input_device_index=self.device,
-            format=pyaudio.paInt16,
+            format=pyaudio.paInt32,
             channels=1,
             rate=self.rate,
             input=True,
@@ -84,7 +84,7 @@ class Stream_Reader:
             start = time.time()
 
         if self.data_buffer is not None:
-            self.data_buffer.append_data(np.frombuffer(in_data, dtype=np.int16))
+            self.data_buffer.append_data(np.frombuffer(in_data, dtype=np.int32paInt32))
             self.new_data = True
 
         if self.verbose:
@@ -147,7 +147,7 @@ class Stream_Reader:
                 rate = int(self.info["defaultSampleRate"])
 
             stream = self.pa.open(
-                format=pyaudio.paInt16,
+                format=pyaudio.paInt32,
                 channels=1,
                 input_device_index=device,
                 frames_per_buffer=self.update_window_n_frames,
