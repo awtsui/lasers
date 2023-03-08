@@ -31,30 +31,32 @@ HOST = os.environ.get("HOST")
 PORT = os.environ.get("PORT")
 
 
-def handle_client_msg(conn, data, settings_queue: Queue):
+def handle_client_msg(conn, data, settings_queue: Queue, files_queue: Queue):
     # TODO: check message validity
     if len(data.split(SEPARATOR)) == 2:
         filename, filesize = data.split(SEPARATOR)
         filename = os.path.basename(filename)
         filesize = int(filesize)
-        download_file(conn, filename, filesize)
+        filepath = ILDA_FILES_PATH + filename
+        download_file(conn, filepath, filesize)
         print("Received file: ", filename)
+        files_queue.put(filepath)
     else:
         data_json = json.loads(data)
         settings_queue.put(data_json)
         print("Received settings: ", data_json)
 
 
-def download_file(conn, filename, filesize):
+def download_file(conn, filepath, filesize):
     progress = tqdm.tqdm(
         range(filesize),
-        f"Receiving {filename}",
+        f"Receiving {filepath}",
         unit="B",
         unit_scale=True,
         unit_divisor=1024,
     )
     bytes_downloaded = 0
-    with open(ILDA_FILES_PATH + filename, "wb") as f:
+    with open(filepath, "wb") as f:
         while bytes_downloaded < filesize:
             bytes_read = conn.recv(BUFFER_SIZE)
             if not bytes_read:
@@ -74,7 +76,7 @@ def send_message(conn, message):
     print("Sending: ", message)
 
 
-def run_server(settings_queue: Queue):
+def run_server(settings_queue: Queue, files_queue: Queue):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((HOST, int(PORT)))
@@ -92,7 +94,7 @@ def run_server(settings_queue: Queue):
             while True:
                 data = conn.recv(BUFFER_SIZE).decode("utf-8")
                 if data:
-                    handle_client_msg(conn, data, settings_queue)
+                    handle_client_msg(conn, data, settings_queue, files_queue)
                 else:
                     break
         finally:

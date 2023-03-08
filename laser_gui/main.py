@@ -308,6 +308,9 @@ class App(customtkinter.CTk):
         self.port = 0
         self.server_name = ""
         self.client = GUIClient()
+        self.color = "#ffffff"
+        self.brightness = 50
+        self.sensitivity = 50
 
     def update_device_settings(self):
         self.client.sendSettingsMessage(self.color, self.brightness, self.sensitivity)

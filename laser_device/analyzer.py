@@ -31,8 +31,8 @@ def run_analyzer(features_queue, analyzer_settings_queue):
             last_update = time.time()
             raw_fftx, raw_fft, binned_fftx, binned_fft = ear.get_audio_features()
             if count % int(sampling_period * fps) == 0:
-                print(f"sampling_period: {sampling_period}")
                 features_queue.put(int(ear.strongest_frequency))
+                print(f"Analyzer: {int(ear.strongest_frequency)}")
                 # now = time.strftime("%H:%M:%S", time.localtime(last_update))
         #         # print(f"Strongest frequency @ {now}: {ear.strongest_frequency}")
         else:
