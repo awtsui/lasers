@@ -28,9 +28,9 @@ def decode_color(hex):
     return tuple(int(hex_striped[i : i + 2], 16) for i in (0, 2, 4))
 
 
-def run_galvo(dac, x, y, z):
-    dac.set_dac_raw(1, x)
-    dac.set_dac_raw(2, y)
+def run_galvo(dac, x, y, z, effect):
+    dac.set_dac_raw(1, int(x * effect))
+    dac.set_dac_raw(2, int(y * effect))
 
 
 # TODO: this is to change laser color, turn on and off
@@ -73,22 +73,25 @@ def run_galvo_and_laser(stop, file, settings, features):
                     decode_color(setting["color"]),
                 )
 
+            effect = 1
             if not features.empty():
                 # print(features.get())
                 feature = features.get()
                 if feature <= BASS_FREQ_UPPER:
                     print(f"WE HAVE BASSSSS @ {feature}")
+                    effect = 2
                 elif feature >= HIGH_FREQ_LOWER:
                     print(f"WE HAVE HIGH PITCH @ {feature}")
+                    effect = 0.5
 
             # TODO: define function that applies feature to coordinates (expand or minimize)
             last_update = time.time()
 
             if (time.time() - last_update) > (1.0 / FPS):
                 for point in table.iterPoints():
-                    # run_galvo(adcdac, point.x, point.y, point.z)
-                    # run_laser(color, brightness, not point.blanking)
-                    # print(point)
+                    run_galvo(adcdac, point.x, point.y, point.z, effect)
+                    run_laser(color, brightness, not point.blanking)
+                    print(point)
                     pass
             else:
                 try:
