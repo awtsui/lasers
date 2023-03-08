@@ -55,6 +55,14 @@ def download_file(conn, filepath, filesize):
         unit_scale=True,
         unit_divisor=1024,
     )
+    dirname = os.path.dirname(__file__)
+    path = os.path.join(dirname, "ilda-files")
+
+    if os.path.exists(path) and os.path.isdir(path):
+        print("exists and is directory")
+    else:
+        os.mkdir(path)
+
     bytes_downloaded = 0
     with open(filepath, "wb") as f:
         while bytes_downloaded < filesize:
