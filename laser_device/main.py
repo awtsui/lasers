@@ -47,4 +47,3 @@ if __name__ == "__main__":
             client_settings = client_settings_queue.get()
             analyzer_settings_queue.put(client_settings["data"]["sensitivity"])
             laser_control_settings_queue.put(client_settings["data"])
-        time.sleep(1)

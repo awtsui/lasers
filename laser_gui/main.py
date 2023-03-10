@@ -132,6 +132,8 @@ class App(customtkinter.CTk):
             border_color="black",
         )
         self.button_color.grid(row=0, column=1, pady=10, padx=10)
+        self.button_color.configure(fg_color="#ffffff")
+        self.button_color.configure(text="#ffffff")
 
         self.label_sensitivity = customtkinter.CTkLabel(
             master=self.frame_connect_bot, text="Sensitivity 50%"
@@ -311,6 +313,13 @@ class App(customtkinter.CTk):
         self.color = "#ffffff"
         self.brightness = 50
         self.sensitivity = 50
+
+        self.menu_lookup.set("IP Address Lookup")
+        self.entry_port.delete("0", "end")
+        self.button_color.configure(fg_color=self.color)
+        self.button_color.configure(text=self.color)
+        self.slider_brightness.set(50)
+        self.slider_sensitivity.set(50)
 
     def update_device_settings(self):
         self.client.sendSettingsMessage(self.color, self.brightness, self.sensitivity)
