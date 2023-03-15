@@ -85,6 +85,7 @@ def send_message(conn, message):
 
 
 def run_server(settings_queue: Queue, files_queue: Queue):
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((HOST, int(PORT)))

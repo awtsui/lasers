@@ -196,8 +196,18 @@ class Point:
         )
 
     def decode(self, t):
-        self.x = t[0] / 0x7FFF
-        self.y = t[1] / 0x7FFF
+        def check_and_map_point(val):
+            if val > 32767:
+                val = 32767
+            if val < -32768:
+                val = -32768
+            map_val = lambda x: int((x + 32768) / (32767 + 32768) * 4096)
+            return map_val(val)
+
+        def map_point_to_range(x, y):
+            return (check_and_map_point(x), check_and_map_point(y))
+
+        self.x, self.y = map_point_to_range(t[0], t[1])
         if len(t) == 6:
             self.true_color = True
             self.z = 0.0
@@ -213,8 +223,8 @@ class Point:
             self.red = 0
             self.green = 0
             self.blue = 0
-            self.color = t[3] & 0xFF
-            self.blanking = (t[3] & (1 << 14)) != 0
+            self.color = t[2] & 0xFF
+            self.blanking = (t[2] & (1 << 14)) != 0
 
 
 def read(stream):
