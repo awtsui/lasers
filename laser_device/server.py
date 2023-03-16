@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 import tqdm
 from queue import Queue
+import time
 
 
 class MissingEnvVariableError(Exception):
@@ -41,6 +42,11 @@ def handle_client_msg(conn, data, settings_queue: Queue, files_queue: Queue):
         download_file(conn, filepath, filesize)
         print("Received file: ", filename)
         files_queue.put(filepath)
+    elif data.endswith(".ild"):
+        filename = os.path.basename(data)
+        filepath = ILDA_FILES_PATH + filename
+        files_queue.put(filepath)
+        print("Received show selection: ", data)
     else:
         data_json = json.loads(data)
         settings_queue.put(data_json)
@@ -56,7 +62,7 @@ def download_file(conn, filepath, filesize):
         unit_divisor=1024,
     )
     dirname = os.path.dirname(__file__)
-    path = os.path.join(dirname, "ilda-files")
+    path = os.path.join(dirname, ILDA_FILES_PATH)
 
     if os.path.exists(path) and os.path.isdir(path):
         print("exists and is directory")
@@ -77,15 +83,20 @@ def download_file(conn, filepath, filesize):
 def send_message(conn, message):
     if type(message) == str:
         conn.sendall(message.encode("utf-8"))
-    elif type(message) == json:
-        conn.sendall(json.dumps(message).encode("utf-8"))
+    elif type(message) == list:
+        conn.sendall(str(message).encode("utf-8"))
     else:
-        pass
+        conn.sendall(json.dumps(message).encode("utf-8"))
     print("Sending: ", message)
 
 
-def run_server(settings_queue: Queue, files_queue: Queue):
+def retrieve_ilda_files():
+    dirname = os.path.dirname(__file__)
+    path = os.path.join(dirname, ILDA_FILES_PATH)
+    return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
+
+def run_server(settings_queue: Queue, files_queue: Queue):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((HOST, int(PORT)))
@@ -99,8 +110,15 @@ def run_server(settings_queue: Queue, files_queue: Queue):
         conn, addr = sock.accept()
         try:
             print(f"Connected by {addr}")
+
+            # Send server name
             send_message(conn, SERVER_NAME)
+
+            # Send list of saved ilda files
+            send_message(conn, retrieve_ilda_files())
+
             while True:
+                time.sleep(1)
                 data = conn.recv(BUFFER_SIZE).decode("utf-8")
                 if data:
                     handle_client_msg(conn, data, settings_queue, files_queue)

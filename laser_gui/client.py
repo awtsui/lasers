@@ -24,6 +24,7 @@ class InvalidMessageEnum(Enum):
     INVALID_COLOR = "INVALID_COLOR"
     INVALID_BRIGHTNESS = "INVALID_BRIGHTNESS"
     INVALID_SENSITIVITY = "INVALID_SENSITIVITY"
+    INVALID_FILE_TYPE = "INVALID_FILE_TYPE"
 
 
 class DisconnectedClientError(Exception):
@@ -54,17 +55,31 @@ class GUIClient:
         # self.connection.settimeout(10)
         self.connection.connect((self.host, self.port))
 
-        # Loop to receive server name
-        while True:
-            data = self.connection.recv(self.BUFFER_SIZE)
-            if data:
-                server_name = data.decode()
-                print(f"Connected to: {server_name}")
-                return server_name
+        server_name, ilda_files = "", []
+        # Wait to receive server name
+        data_name = self.connection.recv(self.BUFFER_SIZE)
+        if data_name:
+            server_name = data_name.decode()
+            print(f"Connected to: {server_name}")
+
+        data_files = self.connection.recv(self.BUFFER_SIZE)
+        if data_files:
+            ilda_files = eval(data_files.decode())
+            print(f"Gathered existing ilda files: {ilda_files}")
+
+        return (server_name, ilda_files)
+
+    # Send message to select EXISTING ilda show
+    def sendShowMessage(self, filename):
+        if not self._isSocketClosed():
+            if not filename.endswith(".ild"):
+                raise InvalidMessageError(InvalidMessageEnum.INVALID_FILE_TYPE)
+            self._sendMessage(filename)
+        else:
+            raise DisconnectedClientError()
 
     def sendSettingsMessage(self, color, brightness, sensitivity):
         if not self._isSocketClosed():
-            # TODO: Check each argument for correct syntax
             if not self._isValidHexaColor(color):
                 raise InvalidMessageError(InvalidMessageEnum.INVALID_COLOR)
 
@@ -89,8 +104,12 @@ class GUIClient:
         else:
             raise DisconnectedClientError()
 
+    # Send message to upload ilda show
     def sendFileMessage(self, filename):
         if not self._isSocketClosed():
+            if not filename.endswith(".ild"):
+                raise InvalidMessageError(InvalidMessageEnum.INVALID_FILE_TYPE)
+
             filesize = os.path.getsize(filename)
             self._sendMessage(f"{filename}{self.SEPARATOR}{filesize}")
 
@@ -114,13 +133,13 @@ class GUIClient:
 
     def _sendMessage(self, message):
         if type(message) == str:
-            print("Sending: ", message)
+            print("Sending show selection: ", message)
             msg_encoded = message.encode("utf-8")
             self.connection.sendall(msg_encoded)
         elif type(message) == bytes:
             self.connection.sendall(message)
         else:
-            print("Sending: ", message)
+            print("Sending settings: ", message)
             self.connection.sendall(json.dumps(message).encode("utf-8"))
 
     def _receiveMessage(self):
