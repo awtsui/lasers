@@ -129,6 +129,9 @@ def run_galvo_and_laser(stop, file, settings, features):
                     setting["enable_scaling"],
                 )
 
+                if not enable_scaling:
+                    effect = 0
+
                 if (not paused and paused_old) or (
                     enable_scaling and not enable_scaling_old
                 ):
