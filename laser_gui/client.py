@@ -6,20 +6,6 @@ from enum import Enum
 import tqdm
 import os
 
-# Example messages
-
-# MOCK_SETTINGS = {"color": "BLUE", "brightness": 100, "sensitiivty": 50, "preset": None}
-
-# example_msg = {
-#     "id": self.msg_id,
-#     "data": {
-#         "color": color,
-#         "brightness": brightness,
-#         "sensitivity": sensitivity,
-#         "paused": paused,
-#     },
-# }
-
 
 class InvalidMessageEnum(Enum):
     INVALID_COLOR = "INVALID_COLOR"
@@ -27,6 +13,7 @@ class InvalidMessageEnum(Enum):
     INVALID_SENSITIVITY = "INVALID_SENSITIVITY"
     INVALID_PAUSED = "INVALID_PAUSED"
     INVALID_FILE_TYPE = "INVALID_FILE_TYPE"
+    INVALID_ENABLE_SCALING = "INVALID_ENABLE_SCALING"
 
 
 class DisconnectedClientError(Exception):
@@ -80,7 +67,9 @@ class GUIClient:
         else:
             raise DisconnectedClientError()
 
-    def sendSettingsMessage(self, color, brightness, sensitivity, paused):
+    def sendSettingsMessage(
+        self, color, brightness, sensitivity, paused, enable_scaling
+    ):
         if not self._isSocketClosed():
             if not self._isValidHexaColor(color):
                 raise InvalidMessageError(InvalidMessageEnum.INVALID_COLOR)
@@ -94,6 +83,9 @@ class GUIClient:
             if type(paused) != bool:
                 raise InvalidMessageError(InvalidMessageEnum.INVALID_PAUSED)
 
+            if type(enable_scaling) != bool:
+                raise InvalidMessageError(InvalidMessageEnum.INVALID_ENABLE_SCALING)
+
             msg = {
                 "id": self.msg_id,
                 "data": {
@@ -101,6 +93,7 @@ class GUIClient:
                     "brightness": brightness,
                     "sensitivity": sensitivity,
                     "paused": paused,
+                    "enable_scaling": enable_scaling,
                 },
             }
             self._sendMessage(msg)

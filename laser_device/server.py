@@ -13,17 +13,6 @@ class MissingEnvVariableError(Exception):
 
 load_dotenv()
 
-# example_msg = {
-#     "id": self.msg_id,
-#     "data": {
-#         "color": color,
-#         "brightness": brightness,
-#         "sensitivity": sensitivity,
-#         "paused": paused,
-#     },
-# }
-
-
 # Server Settings
 BUFFER_SIZE = 4096
 SEPARATOR = "<SEPARATOR>"

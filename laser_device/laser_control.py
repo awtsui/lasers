@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from ilda import *
 import threading
+
 import wiringpi
 import sys
 import queue
@@ -80,6 +81,7 @@ def run_laser(color, brightness, blanking):
         wiringpi.digitalWrite(0, 0)
     else:
         wiringpi.digitalWrite(0, 1)
+    # pass
 
 
 def run_galvo_and_laser(stop, file, settings, features):
@@ -103,7 +105,7 @@ def run_galvo_and_laser(stop, file, settings, features):
     show = [t for t in readFrames(f)]
 
     effect = 0
-    brightness, color, sensitivity, paused = 0, 0, 0, False
+    brightness, color, sensitivity, paused, enable_scaling = 0, 0, 0, False, True
 
     while not stop():
         for table in show:
@@ -117,25 +119,27 @@ def run_galvo_and_laser(stop, file, settings, features):
                 # specified_color = False
 
                 paused_old = paused
+                enable_scaling_old = enable_scaling
 
-                brightness, color, sensitivity, paused = (
+                brightness, color, sensitivity, paused, enable_scaling = (
                     setting["brightness"],
                     decode_color(setting["color"]),
                     setting["sensitivity"],
                     setting["paused"],
+                    setting["enable_scaling"],
                 )
-                
-                if not paused and paused_old:
+
+                if (not paused and paused_old) or (
+                    enable_scaling and not enable_scaling_old
+                ):
                     try:
                         while True:
                             features.get_nowait()
                     except queue.Empty:
                         pass
 
-
-
             if not paused:
-                if not features.empty():
+                if not features.empty() and enable_scaling:
                     feature = features.get()
                     if feature <= 3000:
                         effect = map_feature_to_effect(feature)

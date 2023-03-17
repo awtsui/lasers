@@ -26,6 +26,7 @@ class App(customtkinter.CTk):
         self.sensitivity = 50
         self.paused = False
         self.ilda_shows = []
+        self.enable_scaling = True
 
         # TOP LEVEL SETTINGS
         self.title("LASERS")
@@ -138,10 +139,23 @@ class App(customtkinter.CTk):
         self.button_color.configure(fg_color="#ffffff")
         self.button_color.configure(text="#ffffff")
 
+        self.label_enable_disable_scaling = customtkinter.CTkLabel(
+            master=self.frame_connect_bot, text="Enable/Disable Scaling"
+        )
+        self.label_enable_disable_scaling.grid(row=1, column=0, pady=10, padx=10)
+
+        self.checkbox_enable_disable_scaling = customtkinter.CTkCheckBox(
+            master=self.frame_connect_bot,
+            command=self.checkbox_enable_disable_scaling_callback,
+            text="",
+        )
+        self.checkbox_enable_disable_scaling.grid(row=1, column=1, pady=10, padx=10)
+        self.checkbox_enable_disable_scaling.select()
+
         self.label_sensitivity = customtkinter.CTkLabel(
             master=self.frame_connect_bot, text="Sensitivity 50%"
         )
-        self.label_sensitivity.grid(row=1, column=0, pady=10, padx=10)
+        self.label_sensitivity.grid(row=2, column=0, pady=10, padx=10)
 
         self.slider_sensitivity = customtkinter.CTkSlider(
             master=self.frame_connect_bot,
@@ -149,13 +163,13 @@ class App(customtkinter.CTk):
             from_=0,
             to=1,
         )
-        self.slider_sensitivity.grid(row=1, column=1, pady=10, padx=10)
+        self.slider_sensitivity.grid(row=2, column=1, pady=10, padx=10)
         self.slider_sensitivity.set(0.5)
 
         self.label_brightness = customtkinter.CTkLabel(
             master=self.frame_connect_bot, text="Brightness 50%"
         )
-        self.label_brightness.grid(row=2, column=0, pady=10, padx=10)
+        self.label_brightness.grid(row=3, column=0, pady=10, padx=10)
 
         self.slider_brightness = customtkinter.CTkSlider(
             master=self.frame_connect_bot,
@@ -163,16 +177,16 @@ class App(customtkinter.CTk):
             from_=0,
             to=1,
         )
-        self.slider_brightness.grid(row=2, column=1, pady=10, padx=10)
+        self.slider_brightness.grid(row=3, column=1, pady=10, padx=10)
         self.slider_brightness.set(0.5)
 
         self.label_ilda = customtkinter.CTkLabel(
             master=self.frame_connect_bot, text="Upload Lasershow"
         )
-        self.label_ilda.grid(row=3, column=0, pady=10, padx=10)
+        self.label_ilda.grid(row=4, column=0, pady=10, padx=10)
 
         self.frame_connect_bot_upload = customtkinter.CTkFrame(self.frame_connect_bot)
-        self.frame_connect_bot_upload.grid(row=3, column=1)
+        self.frame_connect_bot_upload.grid(row=4, column=1)
 
         self.textbox_ilda = customtkinter.CTkTextbox(
             master=self.frame_connect_bot_upload, activate_scrollbars=False, height=12
@@ -198,10 +212,10 @@ class App(customtkinter.CTk):
         self.label_choose_ilda = customtkinter.CTkLabel(
             master=self.frame_connect_bot, text="Select Lasershow"
         )
-        self.label_choose_ilda.grid(row=4, column=0, padx=10, pady=10)
+        self.label_choose_ilda.grid(row=5, column=0, padx=10, pady=10)
 
         self.frame_connect_bot_ilda = customtkinter.CTkFrame(self.frame_connect_bot)
-        self.frame_connect_bot_ilda.grid(row=4, column=1)
+        self.frame_connect_bot_ilda.grid(row=5, column=1)
 
         self.menu_select_ilda = customtkinter.CTkOptionMenu(
             master=self.frame_connect_bot_ilda,
@@ -231,7 +245,7 @@ class App(customtkinter.CTk):
             command=self.button_update_settings_callback,
             text="Update",
         )
-        self.button_update_settings.grid(row=3, column=0, pady=20, padx=10)
+        self.button_update_settings.grid(row=3, column=0, pady=10, padx=10)
 
     # CALLBACK FUNCTIONS
 
@@ -330,7 +344,11 @@ class App(customtkinter.CTk):
     def button_update_settings_callback(self):
         try:
             self.client.sendSettingsMessage(
-                self.color, self.brightness, self.sensitivity, self.paused
+                self.color,
+                self.brightness,
+                self.sensitivity,
+                self.paused,
+                self.enable_scaling,
             )
             showinfo(title="Info", message="Settings succesfully uploaded.")
         except Exception as e:
@@ -356,12 +374,23 @@ class App(customtkinter.CTk):
         try:
             self.paused = not self.paused
             self.client.sendSettingsMessage(
-                self.color, self.brightness, self.sensitivity, self.paused
+                self.color,
+                self.brightness,
+                self.sensitivity,
+                self.paused,
+                self.enable_scaling,
             )
             text_new = "Play" if text == "Pause" else "Pause"
             self.button_play_pause.configure(text=text_new)
         except Exception as e:
             showerror(title="Error", message=f"Failed to {text}. Error stack: {e}")
+
+    def checkbox_enable_disable_scaling_callback(self):
+        self.enable_scaling = self.checkbox_enable_disable_scaling.get()
+        if self.enable_scaling:
+            self.slider_sensitivity.configure(state="normal")
+        else:
+            self.slider_sensitivity.configure(state="disabled")
 
     def change_appearance_mode_event(self, new_appearance_mode):
         customtkinter.set_appearance_mode(new_appearance_mode)
