@@ -19,6 +19,7 @@ load_dotenv()
 #         "color": color,
 #         "brightness": brightness,
 #         "sensitivity": sensitivity,
+#         "paused": paused,
 #     },
 # }
 

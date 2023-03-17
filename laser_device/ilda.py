@@ -196,18 +196,7 @@ class Point:
         )
 
     def decode(self, t):
-        def check_and_map_point(val):
-            if val > 32767:
-                val = 32767
-            if val < -32768:
-                val = -32768
-            map_val = lambda x: int((x + 32768) / (32767 + 32768) * 4096)
-            return map_val(val)
-
-        def map_point_to_range(x, y):
-            return (check_and_map_point(x), check_and_map_point(y))
-
-        self.x, self.y = map_point_to_range(t[0], t[1])
+        self.x, self.y = t[0], t[1]
         if len(t) == 6:
             self.true_color = True
             self.z = 0.0

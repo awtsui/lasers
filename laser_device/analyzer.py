@@ -5,7 +5,7 @@ from queue import Queue
 
 def run_analyzer(features_queue, analyzer_settings_queue):
     ear = Stream_Analyzer(
-        device=1,  # Pyaudio (portaudio) device index, defaults to first mic input
+        device=0,  # Pyaudio (portaudio) device index, defaults to first mic input
         rate=None,  # Audio samplerate, None uses the default source settings
         FFT_window_size_ms=60,  # Window size used for the FFT transform
         updates_per_second=1000,  # How often to read the audio stream for new data

@@ -16,6 +16,7 @@ import os
 #         "color": color,
 #         "brightness": brightness,
 #         "sensitivity": sensitivity,
+#         "paused": paused,
 #     },
 # }
 
@@ -24,6 +25,7 @@ class InvalidMessageEnum(Enum):
     INVALID_COLOR = "INVALID_COLOR"
     INVALID_BRIGHTNESS = "INVALID_BRIGHTNESS"
     INVALID_SENSITIVITY = "INVALID_SENSITIVITY"
+    INVALID_PAUSED = "INVALID_PAUSED"
     INVALID_FILE_TYPE = "INVALID_FILE_TYPE"
 
 
@@ -78,7 +80,7 @@ class GUIClient:
         else:
             raise DisconnectedClientError()
 
-    def sendSettingsMessage(self, color, brightness, sensitivity):
+    def sendSettingsMessage(self, color, brightness, sensitivity, paused):
         if not self._isSocketClosed():
             if not self._isValidHexaColor(color):
                 raise InvalidMessageError(InvalidMessageEnum.INVALID_COLOR)
@@ -89,12 +91,16 @@ class GUIClient:
             if type(sensitivity) != int or sensitivity < 0 or sensitivity > 100:
                 raise InvalidMessageError(InvalidMessageEnum.INVALID_SENSITIVITY)
 
+            if type(paused) != bool:
+                raise InvalidMessageError(InvalidMessageEnum.INVALID_PAUSED)
+
             msg = {
                 "id": self.msg_id,
                 "data": {
                     "color": color,
                     "brightness": brightness,
                     "sensitivity": sensitivity,
+                    "paused": paused,
                 },
             }
             self._sendMessage(msg)

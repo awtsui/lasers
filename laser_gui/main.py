@@ -24,6 +24,7 @@ class App(customtkinter.CTk):
         self.color = "#ffffff"
         self.brightness = 50
         self.sensitivity = 50
+        self.paused = False
         self.ilda_shows = []
 
         # TOP LEVEL SETTINGS
@@ -218,12 +219,19 @@ class App(customtkinter.CTk):
         )
         self.button_select_ilda.grid(row=0, column=2, pady=10, padx=10)
 
+        self.button_play_pause = customtkinter.CTkButton(
+            master=self.frame_connect,
+            command=self.button_play_pause_callback,
+            text="Pause",
+        )
+        self.button_play_pause.grid(row=2, column=0, pady=10, padx=10)
+
         self.button_update_settings = customtkinter.CTkButton(
             master=self.frame_connect,
             command=self.button_update_settings_callback,
             text="Update",
         )
-        self.button_update_settings.grid(row=2, column=0, pady=20, padx=10)
+        self.button_update_settings.grid(row=3, column=0, pady=20, padx=10)
 
     # CALLBACK FUNCTIONS
 
@@ -322,7 +330,7 @@ class App(customtkinter.CTk):
     def button_update_settings_callback(self):
         try:
             self.client.sendSettingsMessage(
-                self.color, self.brightness, self.sensitivity
+                self.color, self.brightness, self.sensitivity, self.paused
             )
             showinfo(title="Info", message="Settings succesfully uploaded.")
         except Exception as e:
@@ -342,6 +350,18 @@ class App(customtkinter.CTk):
                 )
         else:
             return
+
+    def button_play_pause_callback(self):
+        text = self.button_play_pause.cget("text")
+        try:
+            self.paused = not self.paused
+            self.client.sendSettingsMessage(
+                self.color, self.brightness, self.sensitivity, self.paused
+            )
+            text_new = "Play" if text == "Pause" else "Pause"
+            self.button_play_pause.configure(text=text_new)
+        except Exception as e:
+            showerror(title="Error", message=f"Failed to {text}. Error stack: {e}")
 
     def change_appearance_mode_event(self, new_appearance_mode):
         customtkinter.set_appearance_mode(new_appearance_mode)

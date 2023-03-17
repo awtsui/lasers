@@ -33,6 +33,19 @@ def decode_color(hex):
     return tuple(int(hex_striped[i : i + 2], 16) for i in (0, 2, 4))
 
 
+def check_and_map_point(val):
+    if val > 32767:
+        val = 32767
+    if val < -32768:
+        val = -32768
+    map_val = lambda x: int((x + 32768) / (32767 + 32768) * 4096)
+    return map_val(val)
+
+
+def map_point_to_range(x, y):
+    return (check_and_map_point(x), check_and_map_point(y))
+
+
 def scale_point(x, y, effect):
     y_diff = y - Y_CENTER
     x_diff = x - X_CENTER
@@ -51,7 +64,7 @@ def scale_point(x, y, effect):
 
     x_effected = x + x_change if x_diff >= 0 else x - x_change
     y_effected = y + y_change if x_diff >= 0 else y - y_change
-    return (x_effected, y_effected)
+    return map_point_to_range(x_effected, y_effected)
 
 
 def run_galvo(dac, x, y, z, effect):
@@ -90,6 +103,7 @@ def run_galvo_and_laser(stop, file, settings, features):
     show = [t for t in readFrames(f)]
 
     effect = 0
+    brightness, color, sensitivity, paused = 0, 0, 0, False
 
     while not stop():
         for table in show:
@@ -102,30 +116,29 @@ def run_galvo_and_laser(stop, file, settings, features):
                 # TODO: include setting to reset color to ilda file
                 # specified_color = False
 
-                # brightness, color, sensitivity = (
-                #     setting["brightness"],
-                #     decode_color(setting["color"]),
-                #     setting["sensitivity"]
-                # )
-                sensitivity = setting["sensitivity"]
+                brightness, color, sensitivity, paused = (
+                    setting["brightness"],
+                    decode_color(setting["color"]),
+                    setting["sensitivity"],
+                    setting["paused"],
+                )
 
-            if not features.empty():
-                feature = features.get()
-                if feature <= 3000:
-                    effect = map_feature_to_effect(feature)
+            if not paused:
+                if not features.empty():
+                    feature = features.get()
+                    if feature <= 3000:
+                        effect = map_feature_to_effect(feature)
+                # print(f"EFFECT: {effect}")
 
-            # print(f"EFFECT: {effect}")
-
-            for point in table.iterPoints():
-                run_galvo(adcdac, point.x, point.y, point.z, effect)
-                run_laser(None, None, point.blanking)
-
-            # TODO: define function that applies feature to coordinates (expand or minimize)
+                for point in table.iterPoints():
+                    run_galvo(adcdac, point.x, point.y, point.z, effect)
+                    run_laser(None, None, point.blanking)
 
 
 def run_master_galvo_laser_task(files, settings, features):
     galvo_laser_thread = None
     stop_thread = False
+    paused_thread = False
 
     while True:
         if not files.empty():
@@ -145,7 +158,7 @@ def run_master_galvo_laser_task(files, settings, features):
             stop_thread = False
             galvo_laser_thread = threading.Thread(
                 target=run_galvo_and_laser,
-                args=[lambda: stop_thread, file, settings, features],
+                args=[lambda: stop_thread, paused_thread, file, settings, features],
                 name=f"Galvo and Laser Show: {file}",
             )
             galvo_laser_thread.daemon = True
