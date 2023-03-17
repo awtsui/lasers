@@ -152,13 +152,15 @@ def run_galvo_and_laser(stop, file, settings, features):
                     run_galvo(adcdac, point.x, point.y, point.z, effect)
                     run_laser(None, None, point.blanking)
 
+    wiringpi.digitalWrite(0, 0)
+
 
 def run_master_galvo_laser_task(files, settings, features, active_show):
     galvo_laser_thread = None
     stop_thread = False
 
     while True:
-        if active_show and not files.empty():
+        if active_show.value and not files.empty():
             file = files.get()
 
             if galvo_laser_thread and galvo_laser_thread.is_alive():
@@ -182,7 +184,7 @@ def run_master_galvo_laser_task(files, settings, features, active_show):
             galvo_laser_thread.start()
             print(f"Starting  {galvo_laser_thread.getName()}")
 
-        if not active_show:
+        if not active_show.value:
             if galvo_laser_thread and galvo_laser_thread.is_alive():
                 print(f"Killing {galvo_laser_thread.getName()} ...")
                 stop_thread = True

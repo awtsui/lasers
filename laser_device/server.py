@@ -107,19 +107,23 @@ def run_server(settings_queue: Queue, files_queue: Queue, active_show):
             # Send list of saved ilda files
             send_message(conn, retrieve_ilda_files())
 
-            active_show.value = True
+            active_show.value = 1
 
             while True:
-                time.sleep(1)
-                data = conn.recv(BUFFER_SIZE).decode("utf-8")
-                if data:
-                    handle_client_msg(conn, data, settings_queue, files_queue)
-                else:
-                    break
+                try:
+                    time.sleep(1)
+                    recv = conn.recv(BUFFER_SIZE)
+                    data = recv.decode("utf-8")
+                    if data:
+                        handle_client_msg(conn, data, settings_queue, files_queue)
+                    else:
+                        break
+                except:
+                    pass
         finally:
             print("Closing current connection")
             conn.close()
-            active_show.value = False
+            active_show.value = 0
 
 
 if __name__ == "__main__":

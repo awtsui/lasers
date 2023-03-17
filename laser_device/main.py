@@ -32,7 +32,7 @@ if __name__ == "__main__":
     features_queue = manager.Queue()  # Strongest frequencies (int)
     files_queue = manager.Queue()
     analyzer_settings_queue = manager.Queue()
-    active_show = manager.Value(value=False)
+    active_show = multiprocessing.Value("i", 0)
 
     # OUT: client_settings & files
     process_server = multiprocessing.Process(
