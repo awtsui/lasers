@@ -116,12 +116,23 @@ def run_galvo_and_laser(stop, file, settings, features):
                 # TODO: include setting to reset color to ilda file
                 # specified_color = False
 
+                paused_old = paused
+
                 brightness, color, sensitivity, paused = (
                     setting["brightness"],
                     decode_color(setting["color"]),
                     setting["sensitivity"],
                     setting["paused"],
                 )
+                
+                if not paused and paused_old:
+                    try:
+                        while True:
+                            features.get_nowait()
+                    except queue.Empty:
+                        pass
+
+
 
             if not paused:
                 if not features.empty():
@@ -138,7 +149,6 @@ def run_galvo_and_laser(stop, file, settings, features):
 def run_master_galvo_laser_task(files, settings, features):
     galvo_laser_thread = None
     stop_thread = False
-    paused_thread = False
 
     while True:
         if not files.empty():
@@ -158,7 +168,7 @@ def run_master_galvo_laser_task(files, settings, features):
             stop_thread = False
             galvo_laser_thread = threading.Thread(
                 target=run_galvo_and_laser,
-                args=[lambda: stop_thread, paused_thread, file, settings, features],
+                args=[lambda: stop_thread, file, settings, features],
                 name=f"Galvo and Laser Show: {file}",
             )
             galvo_laser_thread.daemon = True
