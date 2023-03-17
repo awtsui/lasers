@@ -271,7 +271,7 @@ class App(customtkinter.CTk):
     def button_disconnect_callback(self):
         print("Disconnecting...")
         self.client.disconnect()
-        self.reset_state()
+        self.reset_client()
         print("Disconnected")
         self.switch_frames("disconnect")
 
@@ -336,6 +336,8 @@ class App(customtkinter.CTk):
         try:
             filepath = self.textbox_ilda.get("0.0", "end").strip()
             self.client.sendFileMessage(filepath)
+            self.reload_ilda_menu(filepath)
+            self.reset_show()
             self.client.sendSettingsMessage(
                 self.color,
                 self.brightness,
@@ -343,7 +345,6 @@ class App(customtkinter.CTk):
                 self.paused,
                 self.enable_scaling,
             )
-            self.reload_ilda_menu(filepath)
             showinfo(title="Info", message="File successfully uploaded.")
         except Exception as e:
             showerror(title="Error", message=f"Failed to upload file. Error stack: {e}")
@@ -365,9 +366,11 @@ class App(customtkinter.CTk):
 
     def button_select_ilda_callback(self):
         file_name = self.menu_select_ilda.get()
+        print(file_name)
         if file_name:
             try:
                 self.client.sendShowMessage(file_name)
+                self.reset_show()
                 self.client.sendSettingsMessage(
                     self.color,
                     self.brightness,
@@ -434,7 +437,21 @@ class App(customtkinter.CTk):
         else:
             self.frame_disconnect.grid_forget()
 
-    def reset_state(self):
+    def reset_show(self):
+        self.color = "#ffffff"
+        self.brightness = 50
+        self.sensitivity = 50
+        self.paused = False
+
+        self.button_color.configure(fg_color=self.color)
+        self.button_color.configure(text=self.color)
+        self.slider_brightness.set(0.5)
+        self.label_brightness.configure(text="Brightness 50%")
+        self.slider_sensitivity.set(0.5)
+        self.label_sensitivity.configure(text="Sensitivity 50%")
+        self.button_play_pause.configure(text="Pause")
+
+    def reset_client(self):
         self.ip_address = ""
         self.port = 0
         self.server_name = ""
