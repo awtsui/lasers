@@ -386,7 +386,7 @@ class App(customtkinter.CTk):
             showerror(title="Error", message=f"Failed to {text}. Error stack: {e}")
 
     def checkbox_enable_disable_scaling_callback(self):
-        self.enable_scaling = self.checkbox_enable_disable_scaling.get()
+        self.enable_scaling = not not self.checkbox_enable_disable_scaling.get()
         if self.enable_scaling:
             self.slider_sensitivity.configure(state="normal")
         else:
@@ -428,6 +428,8 @@ class App(customtkinter.CTk):
         self.color = "#ffffff"
         self.brightness = 50
         self.sensitivity = 50
+        self.paused = False
+        self.enable_scaling = True
 
         self.menu_lookup.set("IP Address Lookup")
         self.entry_port.delete("0", "end")
@@ -437,6 +439,8 @@ class App(customtkinter.CTk):
         self.label_brightness.configure(text="Brightness 50%")
         self.slider_sensitivity.set(0.5)
         self.label_sensitivity.configure(text="Sensitivity 50%")
+        self.button_play_pause.configure(text="Pause")
+        self.checkbox_enable_disable_scaling.select()
 
 
 if __name__ == "__main__":
