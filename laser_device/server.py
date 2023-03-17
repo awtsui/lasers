@@ -86,7 +86,7 @@ def retrieve_ilda_files():
     return [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
 
-def run_server(settings_queue: Queue, files_queue: Queue):
+def run_server(settings_queue: Queue, files_queue: Queue, active_show):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((HOST, int(PORT)))
@@ -107,6 +107,8 @@ def run_server(settings_queue: Queue, files_queue: Queue):
             # Send list of saved ilda files
             send_message(conn, retrieve_ilda_files())
 
+            active_show.value = True
+
             while True:
                 time.sleep(1)
                 data = conn.recv(BUFFER_SIZE).decode("utf-8")
@@ -117,6 +119,7 @@ def run_server(settings_queue: Queue, files_queue: Queue):
         finally:
             print("Closing current connection")
             conn.close()
+            active_show.value = False
 
 
 if __name__ == "__main__":

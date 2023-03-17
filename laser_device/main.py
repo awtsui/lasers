@@ -4,6 +4,7 @@ import multiprocessing
 import time
 import signal
 from laser_control import run_master_galvo_laser_task, onInterrupt as onGalvoInterrupt
+
 import wiringpi
 import sys
 
@@ -31,10 +32,13 @@ if __name__ == "__main__":
     features_queue = manager.Queue()  # Strongest frequencies (int)
     files_queue = manager.Queue()
     analyzer_settings_queue = manager.Queue()
+    active_show = manager.Value(value=False)
 
     # OUT: client_settings & files
     process_server = multiprocessing.Process(
-        target=run_server, args=[client_settings_queue, files_queue], name="LAN-Server"
+        target=run_server,
+        args=[client_settings_queue, files_queue, active_show],
+        name="LAN-Server",
     )
     process_server.daemon = True
 
@@ -50,7 +54,7 @@ if __name__ == "__main__":
     # IN: files, laser_control_settings, features
     process_galvo_laser = multiprocessing.Process(
         target=run_master_galvo_laser_task,
-        args=[files_queue, laser_control_settings_queue, features_queue],
+        args=[files_queue, laser_control_settings_queue, features_queue, active_show],
         name="Galvos and Laser Control",
     )
     process_galvo_laser.daemon = True

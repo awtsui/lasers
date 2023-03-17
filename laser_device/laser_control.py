@@ -150,12 +150,12 @@ def run_galvo_and_laser(stop, file, settings, features):
                     run_laser(None, None, point.blanking)
 
 
-def run_master_galvo_laser_task(files, settings, features):
+def run_master_galvo_laser_task(files, settings, features, active_show):
     galvo_laser_thread = None
     stop_thread = False
 
     while True:
-        if not files.empty():
+        if active_show and not files.empty():
             file = files.get()
 
             if galvo_laser_thread and galvo_laser_thread.is_alive():
@@ -178,6 +178,12 @@ def run_master_galvo_laser_task(files, settings, features):
             galvo_laser_thread.daemon = True
             galvo_laser_thread.start()
             print(f"Starting  {galvo_laser_thread.getName()}")
+
+        if not active_show:
+            if galvo_laser_thread and galvo_laser_thread.is_alive():
+                print(f"Killing {galvo_laser_thread.getName()} ...")
+                stop_thread = True
+                galvo_laser_thread.join()
 
 
 def onInterrupt(sig, frame):

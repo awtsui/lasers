@@ -336,6 +336,13 @@ class App(customtkinter.CTk):
         try:
             filepath = self.textbox_ilda.get("0.0", "end").strip()
             self.client.sendFileMessage(filepath)
+            self.client.sendSettingsMessage(
+                self.color,
+                self.brightness,
+                self.sensitivity,
+                self.paused,
+                self.enable_scaling,
+            )
             self.reload_ilda_menu(filepath)
             showinfo(title="Info", message="File successfully uploaded.")
         except Exception as e:
@@ -361,6 +368,13 @@ class App(customtkinter.CTk):
         if file_name:
             try:
                 self.client.sendShowMessage(file_name)
+                self.client.sendSettingsMessage(
+                    self.color,
+                    self.brightness,
+                    self.sensitivity,
+                    self.paused,
+                    self.enable_scaling,
+                )
                 showinfo(title="Info", message="Show successfully selected.")
             except Exception as e:
                 showerror(
