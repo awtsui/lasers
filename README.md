@@ -1,8 +1,4 @@
-# **LASERS**
-
-## Installing
-
-# LASERS
+# _LASERS_
 
 [Proposal for Undergraduate Research Opportunity Program](https://docs.google.com/document/d/1Zs-3Oz4RHg5y4TUKqVspDdzgsVqdx_FvKxMJN8ncZs8/edit?usp=sharing)
 
